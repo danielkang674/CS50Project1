@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+
+{% block title %}
+  Landing
+{% endblock %}
+
+{% block body %}
+<div class="jumbotron">
+  <h1>Welcome to DK's Library</h1>
+  <div class="btn btn-group">
+    <a href="#" class="btn btn-link" id="loginBtn">Log In</a>
+    <a href="#" class="btn btn-link" id="signupBtn">Sign Up</a>
+  </div>
+  {{ message }}
+</div>
+{% if message %}
+<script>
+  let message = {{ message }};
+  console.log(message);
+</script>
+{% endif %}
+<script src="{{ url_for('static', filename='main.js') }}"></script>
+{% endblock %}
