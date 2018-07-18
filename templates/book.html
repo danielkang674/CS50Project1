@@ -1,22 +1,59 @@
 {% extends "layout.html" %}
 
 {% block title %}
-  <!-- {{ title }} -->
-  test
+{{ bookInfo.title }}
 {% endblock %}
 
 {% block body %}
-<h1>{{ bookInfo }}</h1>
-<h2>{{ bookReviews }}</h2>
-<form action="{{ url_for('book', isbn=bookInfo.isbn) }}" method="post">
-  <select name="rating">
-    <option value=1>1</option>
-    <option value=2>2</option>
-    <option value=3>3</option>
-    <option value=4>4</option>
-    <option value=5>5</option>
-  </select>
-  <input type="text" name="review" placeholder="Write a review!">
-  <button type="submit">Submit</button>
+<h1>Book Information</h1>
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Title</th>
+      <th scope="col">Author</th>
+      <th scope="col">Publication Year</th>
+      <th scope="col">ISBN</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th scope="row">{{ bookInfo.title }}</th>
+      <td>{{ bookInfo.author }}</td>
+      <td>{{ bookInfo.year }}</td>
+      <td>{{ bookInfo.isbn }}</td>
+    </tr>
+  </tbody>
+</table>
+<h2>Goodreads Reviews</h2>
+<div>
+  <p><b>Average Rating:</b> {{ grReview.average_rating }}</p>
+  <p><b>Number of Ratings:</b> {{ grReview.work_ratings_count }}</p>
+</div>
+<h3>Book Reviews</h3>
+<ul class="list-group mb-2">
+  {% for review in bookReviews %}
+    <li class="list-group-item"><b>Score:</b> {{ review.rating }}/5
+      <p>{{ review.review }}</p>
+    </li>
+  {% endfor %}
+</ul>
+<form action="{{ url_for('book', isbn=bookInfo.isbn) }}" method="post" class="form-inline">
+  <div class="input-group">
+    <select name="rating" class="form-control">
+      <option value=1>1</option>
+      <option value=2>2</option>
+      <option value=3>3</option>
+      <option value=4>4</option>
+      <option value=5>5</option>
+    </select>
+
+  </div>
+  <div class="input-group">
+    <input type="text" name="review" placeholder="Write a review!" class="form-control">
+    
+  </div>
+  <div class="input-group">
+      <button type="submit" class="form-control">Submit</button>
+  </div>
 </form>
 {% endblock %}

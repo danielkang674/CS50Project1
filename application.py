@@ -1,4 +1,5 @@
 import os
+import requests
 import sqlalchemy
 from dotenv import load_dotenv
 
@@ -8,10 +9,6 @@ from flask import Flask, session, render_template, request, redirect, url_for
 from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
-
-# import requests
-# res = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": "9tXuycx0QtIcjSYQXXDg", "isbns": "9781632168146"})
-# print(res.json())
 
 app = Flask(__name__)
 
@@ -76,7 +73,6 @@ def signup():
 @app.route("/logout", methods=["POST"])
 def logout():
     session.pop('userID', None)
-    print(session)
     return redirect(url_for('index'))
 
 @app.route("/search", methods=["GET", "POST"])
@@ -93,7 +89,6 @@ def search():
             f"SELECT * FROM books WHERE isbn LIKE '%{search}%' OR title LIKE '%{search.capitalize()}%' OR author LIKE '%{search.capitalize()}%'").fetchmany(10)
         if not findBook:
             return render_template("search.html", message='No results')
-        print(findBook)
         return render_template("search.html", results=findBook)
 
 @app.route("/book/<string:isbn>", methods=["GET", "POST"])
@@ -107,10 +102,17 @@ def book(isbn):
             return render_template("book.html", bookInfo="Book does not exist")
         bookReviews = db.execute(
             "SELECT rating, review FROM reviews WHERE isbn = :isbn", {"isbn": isbn}).fetchall()
-        return render_template("book.html", bookInfo=bookInfo, bookReviews=bookReviews, user=session['userID'])
+        res = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": "9tXuycx0QtIcjSYQXXDg", "isbns": isbn})
+        grReview = (res.json()['books'][0])
+        return render_template("book.html", bookInfo=bookInfo, bookReviews=bookReviews, user=session['userID'], grReview=grReview)
     if request.method == "POST":
         rating = request.form.get("rating")
         review = request.form.get("review")
+        user = db.execute(
+            "SELECT isbn, userid FROM reviews WHERE isbn = :isbn AND userid = :userid",
+            {"isbn": isbn, "userid": session['userID']}).fetchone()
+        if user:
+            return render_template("error.html", message="You've already reviewed this book!")
         db.execute(
             "INSERT INTO reviews (rating, review, isbn, userid) VALUES (:rating, :review, :isbn, :userid)",
             {"rating": rating, "review": review, "isbn": isbn, "userid": session['userID']})
