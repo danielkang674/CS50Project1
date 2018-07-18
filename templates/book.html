@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+
+{% block title %}
+  <!-- {{ title }} -->
+  test
+{% endblock %}
+
+{% block body %}
+<h1>{{ bookInfo }}</h1>
+<h2>{{ bookReviews }}</h2>
+<form action="{{ url_for('book', isbn=bookInfo.isbn) }}" method="post">
+  <select name="rating">
+    <option value=1>1</option>
+    <option value=2>2</option>
+    <option value=3>3</option>
+    <option value=4>4</option>
+    <option value=5>5</option>
+  </select>
+  <input type="text" name="review" placeholder="Write a review!">
+  <button type="submit">Submit</button>
+</form>
+{% endblock %}

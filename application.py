@@ -31,10 +31,10 @@ db = scoped_session(sessionmaker(bind=engine))
 
 @app.route("/")
 def index():
-    if 'userID' in session:
-        return render_template("index.html", user=session['userID'])
-    else:
+    if isLoggedIn():
         return render_template("index.html")
+    else:
+        return render_template("index.html", user=session['userID'])
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -81,8 +81,10 @@ def logout():
 
 @app.route("/search", methods=["GET", "POST"])
 def search():
+    if isLoggedIn():
+        return isLoggedIn()
     if request.method == "GET":
-        return render_template("search.html")
+        return render_template("search.html", user=session['userID'])
     if request.method == "POST":
         search = request.form.get("searchBar")
         if search == "":
@@ -93,3 +95,28 @@ def search():
             return render_template("search.html", message='No results')
         print(findBook)
         return render_template("search.html", results=findBook)
+
+@app.route("/book/<string:isbn>", methods=["GET", "POST"])
+def book(isbn):
+    if isLoggedIn():
+        return isLoggedIn()
+    if request.method == "GET":
+        bookInfo = db.execute(
+            "SELECT * FROM books WHERE isbn = :isbn", {"isbn": isbn}).fetchone()
+        if bookInfo is None:
+            return render_template("book.html", bookInfo="Book does not exist")
+        bookReviews = db.execute(
+            "SELECT rating, review FROM reviews WHERE isbn = :isbn", {"isbn": isbn}).fetchall()
+        return render_template("book.html", bookInfo=bookInfo, bookReviews=bookReviews, user=session['userID'])
+    if request.method == "POST":
+        rating = request.form.get("rating")
+        review = request.form.get("review")
+        db.execute(
+            "INSERT INTO reviews (rating, review, isbn, userid) VALUES (:rating, :review, :isbn, :userid)",
+            {"rating": rating, "review": review, "isbn": isbn, "userid": session['userID']})
+        db.commit()
+        return redirect(url_for('book', isbn=isbn))
+
+def isLoggedIn():
+    if 'userID' not in session:
+        return render_template("error.html", message="Please log in first!")

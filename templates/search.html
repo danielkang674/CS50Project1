@@ -17,7 +17,7 @@
 </form>
 <ul class="list-group">
     {% for book in results %}
-        <li class="list-group-item"><cite>{{ book.title|e }}</cite>, {{ book.author|e }}</li>
+        <a href="{{ url_for('book', isbn=book.isbn) }}"><li class="list-group-item"><cite>{{ book.title|e }}</cite>, {{ book.author|e }}</li></a>
     {% endfor %}
 </ul>
 
