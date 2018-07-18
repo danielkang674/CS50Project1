@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Search
+{% endblock %}
+
+{% block body %}
+<h1>Search for books</h1>
+{% if message %}
+<div class="alert alert-danger" role="alert">
+    {{ message }}
+</div>
+{% endif %}
+<form method="post" action="{{ url_for('search') }}" class="form-inline mb-1">
+    <input class="form-control" type="search" name="searchBar" placeholder="ISBN, title, or author">
+    <button class="form-control" type="submit" class="btn btn-outline-primary">Search</button>
+</form>
+<ul class="list-group">
+    {% for book in results %}
+        <li class="list-group-item"><cite>{{ book.title|e }}</cite>, {{ book.author|e }}</li>
+    {% endfor %}
+</ul>
+
+{% endblock %}

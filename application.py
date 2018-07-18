@@ -31,8 +31,10 @@ db = scoped_session(sessionmaker(bind=engine))
 
 @app.route("/")
 def index():
-    return render_template("index.html")
-
+    if 'userID' in session:
+        return render_template("index.html", user=session['userID'])
+    else:
+        return render_template("index.html")
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -47,9 +49,8 @@ def login():
         if findUser is None:
             return render_template("error.html", message="Incorrect login")
         else:
-            session[un] = un
-    return render_template("login.html", message=session[un], user=session[un])
-
+            session['userID'] = un
+    return render_template("login.html", user=session['userID'])
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
@@ -70,11 +71,25 @@ def signup():
             db.commit()
         except sqlalchemy.exc.IntegrityError:
             return render_template("error.html", message="Username already exists")
-    return redirect(url_for('index'))
+    return render_template("signup.html", user=un)
 
 @app.route("/logout", methods=["POST"])
 def logout():
-    un = request.form.get("logout")
-    del session[un]
+    session.pop('userID', None)
     print(session)
     return redirect(url_for('index'))
+
+@app.route("/search", methods=["GET", "POST"])
+def search():
+    if request.method == "GET":
+        return render_template("search.html")
+    if request.method == "POST":
+        search = request.form.get("searchBar")
+        if search == "":
+            return render_template("search.html", message="Enter a search term")
+        findBook = db.execute(
+            f"SELECT * FROM books WHERE isbn LIKE '%{search}%' OR title LIKE '%{search.capitalize()}%' OR author LIKE '%{search.capitalize()}%'").fetchmany(10)
+        if not findBook:
+            return render_template("search.html", message='No results')
+        print(findBook)
+        return render_template("search.html", results=findBook)
