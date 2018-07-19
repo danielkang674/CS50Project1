@@ -119,6 +119,19 @@ def book(isbn):
         db.commit()
         return redirect(url_for('book', isbn=isbn))
 
+@app.route("/api/<string:isbn>")
+def api(isbn):
+    bookInfo = db.execute(
+            "SELECT * FROM books WHERE isbn = :isbn", {"isbn": isbn}).fetchone()
+    if bookInfo is None:
+        return render_template("error.html", message="Error 404 Book could not be found")
+    res = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": "9tXuycx0QtIcjSYQXXDg", "isbns": isbn})
+    grReview = (res.json()['books'][0])
+    bookjson = {
+        "title": bookInfo.title, "author": bookInfo.author, "year": bookInfo.year, "isbn": bookInfo.isbn,
+        "review_count": grReview['work_ratings_count'], "average_score": grReview['average_rating']}
+    return render_template("api.html", bookjson=bookjson)
+
 def isLoggedIn():
     if 'userID' not in session:
         return render_template("error.html", message="Please log in first!")
