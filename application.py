@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from flask import Flask, session, render_template, request, redirect, url_for
+from flask import Flask, session, render_template, request, redirect, url_for, jsonify
 from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -124,13 +124,13 @@ def api(isbn):
     bookInfo = db.execute(
             "SELECT * FROM books WHERE isbn = :isbn", {"isbn": isbn}).fetchone()
     if bookInfo is None:
-        return render_template("error.html", message="Error 404 Book could not be found")
+        return jsonify({"error": "Could not find book"}), 404
     res = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": "9tXuycx0QtIcjSYQXXDg", "isbns": isbn})
     grReview = (res.json()['books'][0])
-    bookjson = {
+    bookjson = jsonify({
         "title": bookInfo.title, "author": bookInfo.author, "year": bookInfo.year, "isbn": bookInfo.isbn,
-        "review_count": grReview['work_ratings_count'], "average_score": grReview['average_rating']}
-    return render_template("api.html", bookjson=bookjson)
+        "review_count": grReview['work_ratings_count'], "average_score": grReview['average_rating']})
+    return bookjson
 
 def isLoggedIn():
     if 'userID' not in session:
